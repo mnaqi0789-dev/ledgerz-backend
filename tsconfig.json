@@ -2,12 +2,12 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
-"module": "nodenext",
+    "module": "nodenext",
     "moduleResolution": "nodenext",
     "target": "esnext",
     "lib": ["esnext"],
     "types": ["node"],
-    
+
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
@@ -22,8 +22,7 @@
     "noFallthroughCasesInSwitch": true,
     "noPropertyAccessFromIndexSignature": true,
     "noUncheckedSideEffectImports": true,
-    
-    "verbatimModuleSyntax": true,
+
     "isolatedModules": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
