@@ -39,3 +39,26 @@ export async function createObjection(req: Request, res: Response) {
     return res.status(500).json({ message: "Internal server error" });
   }
 }
+
+export async function getObjections(req: Request, res: Response) {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    const objections = await prisma.objection.findMany({
+      orderBy: { createdAt: "desc" },
+      include: {
+        entry: {
+          select: { id: true, description: true, amount: true, status: true },
+        },
+        raiser: { select: { id: true, name: true } },
+      },
+    });
+
+    return res.status(200).json(objections);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}

@@ -1,10 +1,16 @@
 import { Request, Response } from "express";
-import { PrismaClient, EntryType, EntryCategory } from "@prisma/client";
+import {
+  PrismaClient,
+  EntryType,
+  EntryCategory,
+  EntryStatus,
+} from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 const VALID_TYPES = Object.values(EntryType);
 const VALID_CATEGORIES = Object.values(EntryCategory);
+const VALID_STATUSES = Object.values(EntryStatus);
 
 export async function createEntry(req: Request, res: Response) {
   try {
@@ -55,7 +61,7 @@ export async function getEntries(req: Request, res: Response) {
       return res.status(401).json({ message: "Not authenticated" });
     }
 
-    const { category, startDate, endDate } = req.query;
+    const { category, startDate, endDate, status } = req.query;
 
     const where: any = {};
 
@@ -68,6 +74,13 @@ export async function getEntries(req: Request, res: Response) {
         return res.status(400).json({ message: "Invalid category filter" });
       }
       where.category = category;
+    }
+
+    if (status && typeof status === "string") {
+      if (!VALID_STATUSES.includes(status as EntryStatus)) {
+        return res.status(400).json({ message: "Invalid status filter" });
+      }
+      where.status = status;
     }
 
     if (
@@ -89,6 +102,10 @@ export async function getEntries(req: Request, res: Response) {
     const entries = await prisma.entry.findMany({
       where,
       orderBy: { createdAt: "desc" },
+      include: {
+        submitter: { select: { id: true, name: true } },
+        _count: { select: { objections: true } },
+      },
     });
 
     return res.status(200).json(entries);
