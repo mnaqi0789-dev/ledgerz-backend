@@ -1,0 +1,41 @@
+import { Request, Response } from "express";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
+
+export async function createObjection(req: Request, res: Response) {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    const { entryId, note } = req.body;
+
+    if (!entryId || typeof entryId !== "number") {
+      return res.status(400).json({ message: "entryId is required" });
+    }
+
+    if (!note || typeof note !== "string" || note.trim().length === 0) {
+      return res.status(400).json({ message: "Note is required" });
+    }
+
+    const entry = await prisma.entry.findUnique({ where: { id: entryId } });
+
+    if (!entry) {
+      return res.status(404).json({ message: "Entry not found" });
+    }
+
+    const objection = await prisma.objection.create({
+      data: {
+        entryId,
+        raisedBy: req.user.id,
+        note,
+      },
+    });
+
+    return res.status(201).json(objection);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
