@@ -120,14 +120,14 @@ async function decideEntry(
   req: Request,
   res: Response,
   newStatus: "approved" | "rejected",
-  rejectionReason?: string,
+  rejectionReason: string | null = null,
 ) {
   try {
     if (!req.user) {
       return res.status(401).json({ message: "Not authenticated" });
     }
 
-    const id = Number(req.params.id);
+    const id = Number(req.params["id"]);
 
     if (isNaN(id)) {
       return res.status(400).json({ message: "Invalid entry id" });
