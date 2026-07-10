@@ -81,7 +81,7 @@ model Entry {
 
 model TreasuryHolding {
   id              Int                   @id @default(autoincrement())
-  assetName       String                @map("asset_name")
+  assetName       String                @unique @map("asset_name")
   quantity        Decimal
   buyPrice        Decimal               @map("buy_price")
   currentPrice    Decimal               @map("current_price")

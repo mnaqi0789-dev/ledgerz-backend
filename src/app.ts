@@ -4,6 +4,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import authRoutes from "./routes/authRoutes";
 import entryRoutes from "./routes/entryRoutes";
+import treasuryRoutes from "./routes/treasuryRoutes";
 
 const app: Application = express();
 
@@ -19,6 +20,7 @@ app.get("/health", (_req: Request, res: Response) => {
 
 app.use("/auth", authRoutes);
 app.use("/entries", entryRoutes);
+app.use("/treasury", treasuryRoutes);
 
 app.use((_req: Request, res: Response) => {
   res.status(404).json({ message: "Route not found" });
