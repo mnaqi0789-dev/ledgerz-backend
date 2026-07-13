@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
-import { PrismaClient, AuditRefType } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { AuditRefType } from "@prisma/client";
+import { prisma } from "../lib/prisma";
 
 const VALID_REF_TYPES = Object.values(AuditRefType);
 
@@ -26,14 +25,7 @@ export async function getAuditLog(req: Request, res: Response) {
       where,
       orderBy: { createdAt: "desc" },
       include: {
-        actor: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-          },
-        },
+        actor: { select: { id: true, name: true, email: true, role: true } },
       },
     });
 

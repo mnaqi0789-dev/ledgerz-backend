@@ -1,9 +1,7 @@
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "../lib/prisma";
 
 export async function register(req: Request, res: Response) {
   try {
@@ -62,7 +60,7 @@ export async function login(req: Request, res: Response) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-const jwtSecret = process.env["JWT_SECRET"];
+    const jwtSecret = process.env["JWT_SECRET"];
 
     if (!jwtSecret) {
       console.error("JWT_SECRET is not set");

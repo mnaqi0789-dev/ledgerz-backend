@@ -5,7 +5,7 @@ import {
   getTreasury,
   buyTreasury,
   sellTreasury,
-} from "../controllers/treasuryController";
+} from "../controllers/treasury";
 
 const router = Router();
 

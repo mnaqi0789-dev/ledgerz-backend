@@ -14,7 +14,9 @@ async function fetchPrice(assetName: string): Promise<number | null> {
     }
 
     const data = await response.json();
-    const price = data?.[assetName.toLowerCase()]?.usd;
+const price = (data as Record<string, { usd: number }>)?.[
+  assetName.toLowerCase()
+]?.usd;
 
     return typeof price === "number" ? price : null;
   } catch (err) {

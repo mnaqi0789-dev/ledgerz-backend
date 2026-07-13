@@ -6,7 +6,7 @@ import {
   getEntries,
   approveEntry,
   rejectEntry,
-} from "../controllers/entryController";
+} from "../controllers/entries";
 
 const router = Router();
 
