@@ -7,6 +7,7 @@ import entryRoutes from "./routes/entryRoutes";
 import treasuryRoutes from "./routes/treasuryRoutes";
 import objectionRoutes from "./routes/objectionRoutes";
 import auditLogRoutes from "./routes/auditLogRoutes";
+import accessRequestRoutes from "./routes/accessRequestRoutes";
 
 const app: Application = express();
 
@@ -25,6 +26,7 @@ app.use("/entries", entryRoutes);
 app.use("/treasury", treasuryRoutes);
 app.use("/objections", objectionRoutes);
 app.use("/audit-log", auditLogRoutes);
+app.use("/access-requests", accessRequestRoutes);
 
 app.use((_req: Request, res: Response) => {
   res.status(404).json({ message: "Route not found" });
