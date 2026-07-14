@@ -21,9 +21,19 @@ enum EntryType {
 
 enum EntryCategory {
   rent
+  utilities
   salaries
   client_payment
+  vendor_payment
+  office_supplies
+  travel
+  marketing
+  software_subscriptions
+  insurance
+  taxes
   treasury
+  professional_fees
+  equipment
   misc
 }
 
@@ -42,6 +52,13 @@ enum AuditRefType {
   entry
   treasury
   objection
+  access_request
+}
+
+enum AccessRequestStatus {
+  pending
+  approved
+  denied
 }
 
 model User {
@@ -53,9 +70,11 @@ model User {
   createdAt            DateTime              @default(now()) @map("created_at")
   submittedEntries     Entry[]               @relation("EntrySubmittedBy")
   decidedEntries       Entry[]               @relation("EntryDecidedBy")
+  deletedEntries       Entry[]               @relation("EntryDeletedBy")
   executedTransactions TreasuryTransaction[] @relation("TransactionExecutedBy")
   raisedObjections     Objection[]           @relation("ObjectionRaisedBy")
   auditLogs            AuditLog[]            @relation("AuditActor")
+  reviewedRequests     AccessRequest[]       @relation("AccessRequestReviewedBy")
 
   @@map("users")
 }
@@ -74,6 +93,9 @@ model Entry {
   rejectionReason String?       @map("rejection_reason")
   createdAt       DateTime      @default(now()) @map("created_at")
   decidedAt       DateTime?     @map("decided_at")
+  deletedAt       DateTime?     @map("deleted_at")
+  deletedBy       Int?          @map("deleted_by")
+  deleter         User?         @relation("EntryDeletedBy", fields: [deletedBy], references: [id])
   objections      Objection[]
 
   @@map("entries")
@@ -129,4 +151,19 @@ model AuditLog {
   createdAt DateTime     @default(now()) @map("created_at")
 
   @@map("audit_log")
+}
+
+model AccessRequest {
+  id           Int                  @id @default(autoincrement())
+  name         String
+  email        String
+  requestedRole UserRole            @map("requested_role")
+  note         String?
+  status       AccessRequestStatus  @default(pending)
+  reviewedBy   Int?                 @map("reviewed_by")
+  reviewer     User?                @relation("AccessRequestReviewedBy", fields: [reviewedBy], references: [id])
+  createdAt    DateTime             @default(now()) @map("created_at")
+  reviewedAt   DateTime?            @map("reviewed_at")
+
+  @@map("access_requests")
 }
