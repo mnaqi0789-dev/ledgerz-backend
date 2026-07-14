@@ -1,7 +1,10 @@
 import { Request, Response } from "express";
 import { EntryCategory, EntryStatus } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
-import { VALID_ENTRY_CATEGORIES, VALID_ENTRY_STATUSES } from "../../validators/entryValidators";
+import {
+  VALID_ENTRY_CATEGORIES,
+  VALID_ENTRY_STATUSES,
+} from "../../validators/entryValidators";
 
 export async function getEntries(req: Request, res: Response) {
   try {
@@ -31,7 +34,12 @@ export async function getEntries(req: Request, res: Response) {
       where.status = status;
     }
 
-    if (startDate && endDate && typeof startDate === "string" && typeof endDate === "string") {
+    if (
+      startDate &&
+      endDate &&
+      typeof startDate === "string" &&
+      typeof endDate === "string"
+    ) {
       const start = new Date(startDate);
       const end = new Date(endDate);
 

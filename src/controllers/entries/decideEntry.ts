@@ -38,7 +38,7 @@ async function decideEntry(
 
     const entry = await prisma.entry.findUnique({ where: { id } });
 
-    if (!entry) {
+    if (!entry || entry.deletedAt) {
       return res.status(404).json({ message: "Entry not found" });
     }
 
