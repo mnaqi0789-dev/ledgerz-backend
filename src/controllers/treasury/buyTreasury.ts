@@ -17,53 +17,33 @@ export async function buyTreasury(req: Request, res: Response) {
       return res.status(400).json({ message: validationError });
     }
 
-    const existing = await prisma.treasuryHolding.findUnique({
-      where: { assetName },
-    });
-
     const newQuantity = new Prisma.Decimal(quantity);
     const newPrice = new Prisma.Decimal(price);
+    const holding = await prisma.$transaction(async (tx) => {
+      const existing = await tx.treasuryHolding.findUnique({ where: { assetName } });
+      const updatedHolding = existing
+        ? await tx.treasuryHolding.update({
+            where: { assetName },
+            data: {
+              quantity: existing.quantity.plus(newQuantity),
+              buyPrice: weightedAverageCost(existing.quantity, existing.buyPrice, newQuantity, newPrice),
+              currentPrice: newPrice,
+              lastPriceUpdate: new Date(),
+            },
+          })
+        : await tx.treasuryHolding.create({
+            data: { assetName, quantity: newQuantity, buyPrice: newPrice, currentPrice: newPrice, lastPriceUpdate: new Date() },
+          });
 
-    let holding;
-
-    if (existing) {
-      const totalQuantity = existing.quantity.plus(newQuantity);
-      const weightedBuyPrice = weightedAverageCost(
-        existing.quantity,
-        existing.buyPrice,
-        newQuantity,
-        newPrice,
-      );
-
-      holding = await prisma.treasuryHolding.update({
-        where: { assetName },
-        data: {
-          quantity: totalQuantity,
-          buyPrice: weightedBuyPrice,
-          currentPrice: newPrice,
-          lastPriceUpdate: new Date(),
-        },
+      const transaction = await tx.treasuryTransaction.create({
+        data: { holdingId: updatedHolding.id, action: "buy", quantity: newQuantity, price: newPrice, executedBy: req.user.id },
       });
-    } else {
-      holding = await prisma.treasuryHolding.create({
-        data: {
-          assetName,
-          quantity: newQuantity,
-          buyPrice: newPrice,
-          currentPrice: newPrice,
-          lastPriceUpdate: new Date(),
-        },
-      });
-    }
 
-    await prisma.treasuryTransaction.create({
-      data: {
-        holdingId: holding.id,
-        action: "buy",
-        quantity: newQuantity,
-        price: newPrice,
-        executedBy: req.user.id,
-      },
+      await tx.auditLog.create({
+        data: { refType: "treasury", refId: transaction.id, action: "bought", actorId: req.user.id },
+      });
+
+      return updatedHolding;
     });
 
     return res.status(201).json(holding);

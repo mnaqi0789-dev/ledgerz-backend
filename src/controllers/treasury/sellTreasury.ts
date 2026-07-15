@@ -16,43 +16,38 @@ export async function sellTreasury(req: Request, res: Response) {
       return res.status(400).json({ message: validationError });
     }
 
-    const existing = await prisma.treasuryHolding.findUnique({
-      where: { assetName },
-    });
-
-    if (!existing) {
-      return res.status(404).json({ message: "Holding not found" });
-    }
-
     const sellQuantity = new Prisma.Decimal(quantity);
     const sellPrice = new Prisma.Decimal(price);
+    const result = await prisma.$transaction(async (tx) => {
+      const existing = await tx.treasuryHolding.findUnique({ where: { assetName } });
 
-    if (existing.quantity.lessThan(sellQuantity)) {
-      return res.status(409).json({ message: "Insufficient quantity to sell" });
+      if (!existing) {
+        return { error: "Holding not found", status: 404 };
+      }
+
+      if (existing.quantity.lessThan(sellQuantity)) {
+        return { error: "Insufficient quantity to sell", status: 409 };
+      }
+
+      const holding = await tx.treasuryHolding.update({
+        where: { assetName },
+        data: { quantity: existing.quantity.minus(sellQuantity), currentPrice: sellPrice, lastPriceUpdate: new Date() },
+      });
+      const transaction = await tx.treasuryTransaction.create({
+        data: { holdingId: holding.id, action: "sell", quantity: sellQuantity, price: sellPrice, executedBy: req.user.id },
+      });
+      await tx.auditLog.create({
+        data: { refType: "treasury", refId: transaction.id, action: "sold", actorId: req.user.id },
+      });
+
+      return { holding };
+    });
+
+    if ("error" in result) {
+      return res.status(result.status).json({ message: result.error });
     }
 
-    const remainingQuantity = existing.quantity.minus(sellQuantity);
-
-    const holding = await prisma.treasuryHolding.update({
-      where: { assetName },
-      data: {
-        quantity: remainingQuantity,
-        currentPrice: sellPrice,
-        lastPriceUpdate: new Date(),
-      },
-    });
-
-    await prisma.treasuryTransaction.create({
-      data: {
-        holdingId: holding.id,
-        action: "sell",
-        quantity: sellQuantity,
-        price: sellPrice,
-        executedBy: req.user.id,
-      },
-    });
-
-    return res.status(200).json(holding);
+    return res.status(200).json(result.holding);
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Internal server error" });

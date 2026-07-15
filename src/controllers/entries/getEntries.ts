@@ -34,20 +34,35 @@ export async function getEntries(req: Request, res: Response) {
       where.status = status;
     }
 
-    if (
-      startDate &&
-      endDate &&
-      typeof startDate === "string" &&
-      typeof endDate === "string"
-    ) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
+    if ((startDate && typeof startDate !== "string") || (endDate && typeof endDate !== "string")) {
+      return res.status(400).json({ message: "Invalid date range" });
+    }
 
-      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+    if (typeof startDate === "string" || typeof endDate === "string") {
+      const range: { gte?: Date; lt?: Date } = {};
+
+      if (startDate) {
+        const start = new Date(`${startDate}T00:00:00.000Z`);
+        if (isNaN(start.getTime())) {
+          return res.status(400).json({ message: "Invalid date range" });
+        }
+        range.gte = start;
+      }
+
+      if (endDate) {
+        const end = new Date(`${endDate}T00:00:00.000Z`);
+        if (isNaN(end.getTime())) {
+          return res.status(400).json({ message: "Invalid date range" });
+        }
+        end.setUTCDate(end.getUTCDate() + 1);
+        range.lt = end;
+      }
+
+      if (range.gte && range.lt && range.gte >= range.lt) {
         return res.status(400).json({ message: "Invalid date range" });
       }
 
-      where.createdAt = { gte: start, lte: end };
+      where.createdAt = range;
     }
 
     const entries = await prisma.entry.findMany({

@@ -23,12 +23,18 @@ export async function createObjection(req: Request, res: Response) {
       return res.status(404).json({ message: "Entry not found" });
     }
 
-    const objection = await prisma.objection.create({
-      data: {
-        entryId,
-        raisedBy: req.user.id,
-        note,
-      },
+    if (entry.deletedAt) {
+      return res.status(404).json({ message: "Entry not found" });
+    }
+
+    const objection = await prisma.$transaction(async (tx) => {
+      const createdObjection = await tx.objection.create({
+        data: { entryId, raisedBy: req.user.id, note },
+      });
+      await tx.auditLog.create({
+        data: { refType: "objection", refId: createdObjection.id, action: "raised", actorId: req.user.id },
+      });
+      return createdObjection;
     });
 
     return res.status(201).json(objection);
