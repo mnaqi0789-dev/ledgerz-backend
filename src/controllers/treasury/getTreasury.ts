@@ -12,6 +12,7 @@ export async function getTreasury(req: Request, res: Response) {
     }
 
     const holdings = await prisma.treasuryHolding.findMany({
+      where: { quantity: { gt: 0 } },
       orderBy: { assetName: "asc" },
     });
 

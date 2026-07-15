@@ -12,9 +12,14 @@ export async function getEntries(req: Request, res: Response) {
       return res.status(401).json({ message: "Not authenticated" });
     }
 
-    const { category, startDate, endDate, status } = req.query;
+    const { category, startDate, endDate, status, includeDeleted } = req.query;
 
-    const where: any = { deletedAt: null };
+    const where: any = {};
+
+    const wantsDeleted = req.user.role === "admin" && includeDeleted === "true";
+    if (!wantsDeleted) {
+      where.deletedAt = null;
+    }
 
     if (req.user.role === "maker") {
       where.submittedBy = req.user.id;
@@ -34,7 +39,10 @@ export async function getEntries(req: Request, res: Response) {
       where.status = status;
     }
 
-    if ((startDate && typeof startDate !== "string") || (endDate && typeof endDate !== "string")) {
+    if (
+      (startDate && typeof startDate !== "string") ||
+      (endDate && typeof endDate !== "string")
+    ) {
       return res.status(400).json({ message: "Invalid date range" });
     }
 

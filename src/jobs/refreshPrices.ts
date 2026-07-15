@@ -1,12 +1,11 @@
 import cron from "node-cron";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "../lib/prisma";
 
 async function fetchPrice(assetName: string): Promise<number | null> {
   try {
+    const ticker = assetName.toUpperCase();
     const response = await fetch(
-      `https://api.coingecko.com/api/v3/simple/price?ids=${assetName.toLowerCase()}&vs_currencies=usd`,
+      `https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${process.env["FINNHUB_API_KEY"]}`,
     );
 
     if (!response.ok) {
@@ -14,11 +13,9 @@ async function fetchPrice(assetName: string): Promise<number | null> {
     }
 
     const data = await response.json();
-const price = (data as Record<string, { usd: number }>)?.[
-  assetName.toLowerCase()
-]?.usd;
+    const price = (data as Record<string, number>)?.["c"];
 
-    return typeof price === "number" ? price : null;
+    return typeof price === "number" && price > 0 ? price : null;
   } catch (err) {
     console.error(`Failed to fetch price for ${assetName}`, err);
     return null;
