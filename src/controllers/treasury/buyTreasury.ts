@@ -19,28 +19,54 @@ export async function buyTreasury(req: Request, res: Response) {
 
     const newQuantity = new Prisma.Decimal(quantity);
     const newPrice = new Prisma.Decimal(price);
+    const userId = req.user.id;
+
     const holding = await prisma.$transaction(async (tx) => {
-      const existing = await tx.treasuryHolding.findUnique({ where: { assetName } });
+      const existing = await tx.treasuryHolding.findUnique({
+        where: { assetName },
+      });
       const updatedHolding = existing
         ? await tx.treasuryHolding.update({
             where: { assetName },
             data: {
               quantity: existing.quantity.plus(newQuantity),
-              buyPrice: weightedAverageCost(existing.quantity, existing.buyPrice, newQuantity, newPrice),
+              buyPrice: weightedAverageCost(
+                existing.quantity,
+                existing.buyPrice,
+                newQuantity,
+                newPrice,
+              ),
               currentPrice: newPrice,
               lastPriceUpdate: new Date(),
             },
           })
         : await tx.treasuryHolding.create({
-            data: { assetName, quantity: newQuantity, buyPrice: newPrice, currentPrice: newPrice, lastPriceUpdate: new Date() },
+            data: {
+              assetName,
+              quantity: newQuantity,
+              buyPrice: newPrice,
+              currentPrice: newPrice,
+              lastPriceUpdate: new Date(),
+            },
           });
 
       const transaction = await tx.treasuryTransaction.create({
-        data: { holdingId: updatedHolding.id, action: "buy", quantity: newQuantity, price: newPrice, executedBy: req.user.id },
+        data: {
+          holdingId: updatedHolding.id,
+          action: "buy",
+          quantity: newQuantity,
+          price: newPrice,
+          executedBy: userId,
+        },
       });
 
       await tx.auditLog.create({
-        data: { refType: "treasury", refId: transaction.id, action: "bought", actorId: req.user.id },
+        data: {
+          refType: "treasury",
+          refId: transaction.id,
+          action: "bought",
+          actorId: userId,
+        },
       });
 
       return updatedHolding;

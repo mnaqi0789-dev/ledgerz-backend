@@ -8,9 +8,14 @@ export async function getOverview(req: Request, res: Response) {
     }
 
     const now = new Date();
-    const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-    const nextMonthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
-    const entryScope = req.user.role === "maker" ? { submittedBy: req.user.id } : {};
+    const monthStart = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
+    );
+    const nextMonthStart = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1),
+    );
+    const entryScope =
+      req.user.role === "maker" ? { submittedBy: req.user.id } : {};
 
     const [monthEntries, pendingEntries, holdings] = await Promise.all([
       prisma.entry.findMany({
@@ -38,15 +43,18 @@ export async function getOverview(req: Request, res: Response) {
       const amount = Number(entry.amount);
       if (entry.type === "in") cashIn += amount;
       if (entry.type === "out") cashOut += amount;
-      categoryTotals[entry.category] = (categoryTotals[entry.category] ?? 0) + amount;
+      categoryTotals[entry.category] =
+        (categoryTotals[entry.category] ?? 0) + amount;
     }
 
     const treasuryValue = holdings.reduce(
-      (total, holding) => total + Number(holding.quantity) * Number(holding.currentPrice),
+      (total: number, holding: { quantity: unknown; currentPrice: unknown }) =>
+        total + Number(holding.quantity) * Number(holding.currentPrice),
       0,
     );
     const treasuryCost = holdings.reduce(
-      (total, holding) => total + Number(holding.quantity) * Number(holding.buyPrice),
+      (total: number, holding: { quantity: unknown; buyPrice: unknown }) =>
+        total + Number(holding.quantity) * Number(holding.buyPrice),
       0,
     );
 
