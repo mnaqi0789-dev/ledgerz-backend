@@ -9,6 +9,6 @@ import {
 const router = Router();
 
 router.post("/", requireAuth, requireRole("admin"), createObjection);
-router.get("/", requireAuth, requireRole("admin"), getObjections);
+router.get("/", requireAuth, requireRole("admin", "manager"), getObjections);
 
 export default router;

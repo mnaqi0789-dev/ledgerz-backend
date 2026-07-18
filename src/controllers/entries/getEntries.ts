@@ -12,7 +12,8 @@ export async function getEntries(req: Request, res: Response) {
       return res.status(401).json({ message: "Not authenticated" });
     }
 
-    const { category, startDate, endDate, status, includeDeleted } = req.query;
+    const { category, startDate, endDate, status, includeDeleted, mine } =
+      req.query;
 
     const where: any = {};
 
@@ -21,7 +22,7 @@ export async function getEntries(req: Request, res: Response) {
       where.deletedAt = null;
     }
 
-    if (req.user.role === "maker") {
+    if (mine === "true") {
       where.submittedBy = req.user.id;
     }
 

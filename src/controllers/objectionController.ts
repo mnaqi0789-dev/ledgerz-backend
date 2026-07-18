@@ -61,7 +61,15 @@ export async function getObjections(req: Request, res: Response) {
       orderBy: { createdAt: "desc" },
       include: {
         entry: {
-          select: { id: true, description: true, amount: true, status: true },
+          select: {
+            id: true,
+            description: true,
+            amount: true,
+            status: true,
+            type: true,
+            category: true,
+            deletedAt: true,
+          },
         },
         raiser: { select: { id: true, name: true } },
       },
