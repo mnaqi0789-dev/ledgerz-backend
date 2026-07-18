@@ -17,7 +17,7 @@ export async function getOverview(req: Request, res: Response) {
     const entryScope =
       req.user.role === "maker" ? { submittedBy: req.user.id } : {};
 
-    const [monthEntries, pendingEntries, holdings] = await Promise.all([
+    const [monthEntries, pendingEntries] = await Promise.all([
       prisma.entry.findMany({
         where: {
           ...entryScope,
@@ -29,9 +29,6 @@ export async function getOverview(req: Request, res: Response) {
       }),
       prisma.entry.count({
         where: { ...entryScope, deletedAt: null, status: "submitted" },
-      }),
-      prisma.treasuryHolding.findMany({
-        select: { quantity: true, buyPrice: true, currentPrice: true },
       }),
     ]);
 
@@ -47,17 +44,6 @@ export async function getOverview(req: Request, res: Response) {
         (categoryTotals[entry.category] ?? 0) + amount;
     }
 
-    const treasuryValue = holdings.reduce(
-      (total: number, holding: { quantity: unknown; currentPrice: unknown }) =>
-        total + Number(holding.quantity) * Number(holding.currentPrice),
-      0,
-    );
-    const treasuryCost = holdings.reduce(
-      (total: number, holding: { quantity: unknown; buyPrice: unknown }) =>
-        total + Number(holding.quantity) * Number(holding.buyPrice),
-      0,
-    );
-
     return res.status(200).json({
       periodStart: monthStart,
       periodEnd: nextMonthStart,
@@ -66,9 +52,6 @@ export async function getOverview(req: Request, res: Response) {
       netCashFlow: cashIn - cashOut,
       pendingEntries,
       approvedEntryCount: monthEntries.length,
-      treasuryValue,
-      treasuryCost,
-      unrealizedGainLoss: treasuryValue - treasuryCost,
       categoryTotals,
     });
   } catch (err) {

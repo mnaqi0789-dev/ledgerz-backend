@@ -43,14 +43,8 @@ enum EntryStatus {
   rejected
 }
 
-enum TreasuryAction {
-  buy
-  sell
-}
-
 enum AuditRefType {
   entry
-  treasury
   objection
   access_request
 }
@@ -62,19 +56,18 @@ enum AccessRequestStatus {
 }
 
 model User {
-  id                   Int                   @id @default(autoincrement())
-  name                 String
-  email                String                @unique
-  passwordHash         String                @map("password_hash")
-  role                 UserRole
-  createdAt            DateTime              @default(now()) @map("created_at")
-  submittedEntries     Entry[]               @relation("EntrySubmittedBy")
-  decidedEntries       Entry[]               @relation("EntryDecidedBy")
-  deletedEntries       Entry[]               @relation("EntryDeletedBy")
-  executedTransactions TreasuryTransaction[] @relation("TransactionExecutedBy")
-  raisedObjections     Objection[]           @relation("ObjectionRaisedBy")
-  auditLogs            AuditLog[]            @relation("AuditActor")
-  reviewedRequests     AccessRequest[]       @relation("AccessRequestReviewedBy")
+  id               Int             @id @default(autoincrement())
+  name             String
+  email            String          @unique
+  passwordHash     String          @map("password_hash")
+  role             UserRole
+  createdAt        DateTime        @default(now()) @map("created_at")
+  submittedEntries Entry[]         @relation("EntrySubmittedBy")
+  decidedEntries   Entry[]         @relation("EntryDecidedBy")
+  deletedEntries   Entry[]         @relation("EntryDeletedBy")
+  raisedObjections Objection[]     @relation("ObjectionRaisedBy")
+  auditLogs        AuditLog[]      @relation("AuditActor")
+  reviewedRequests AccessRequest[] @relation("AccessRequestReviewedBy")
 
   @@map("users")
 }
@@ -99,33 +92,6 @@ model Entry {
   objections      Objection[]
 
   @@map("entries")
-}
-
-model TreasuryHolding {
-  id              Int                   @id @default(autoincrement())
-  assetName       String                @unique @map("asset_name")
-  quantity        Decimal
-  buyPrice        Decimal               @map("buy_price")
-  currentPrice    Decimal               @map("current_price")
-  lastPriceUpdate DateTime              @map("last_price_update")
-  updatedAt       DateTime              @updatedAt @map("updated_at")
-  transactions    TreasuryTransaction[]
-
-  @@map("treasury_holdings")
-}
-
-model TreasuryTransaction {
-  id         Int             @id @default(autoincrement())
-  holdingId  Int             @map("holding_id")
-  holding    TreasuryHolding @relation(fields: [holdingId], references: [id])
-  action     TreasuryAction
-  quantity   Decimal
-  price      Decimal
-  executedBy Int             @map("executed_by")
-  executor   User            @relation("TransactionExecutedBy", fields: [executedBy], references: [id])
-  createdAt  DateTime        @default(now()) @map("created_at")
-
-  @@map("treasury_transactions")
 }
 
 model Objection {
@@ -154,16 +120,16 @@ model AuditLog {
 }
 
 model AccessRequest {
-  id           Int                  @id @default(autoincrement())
-  name         String
-  email        String
+  id            Int                 @id @default(autoincrement())
+  name          String
+  email         String
   requestedRole UserRole            @map("requested_role")
-  note         String?
-  status       AccessRequestStatus  @default(pending)
-  reviewedBy   Int?                 @map("reviewed_by")
-  reviewer     User?                @relation("AccessRequestReviewedBy", fields: [reviewedBy], references: [id])
-  createdAt    DateTime             @default(now()) @map("created_at")
-  reviewedAt   DateTime?            @map("reviewed_at")
+  note          String?
+  status        AccessRequestStatus @default(pending)
+  reviewedBy    Int?                @map("reviewed_by")
+  reviewer      User?               @relation("AccessRequestReviewedBy", fields: [reviewedBy], references: [id])
+  createdAt     DateTime            @default(now()) @map("created_at")
+  reviewedAt    DateTime?           @map("reviewed_at")
 
   @@map("access_requests")
 }
