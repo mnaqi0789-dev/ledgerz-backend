@@ -4,7 +4,6 @@ import helmet from "helmet";
 import morgan from "morgan";
 import authRoutes from "./routes/authRoutes";
 import entryRoutes from "./routes/entryRoutes";
-import treasuryRoutes from "./routes/treasuryRoutes";
 import objectionRoutes from "./routes/objectionRoutes";
 import auditLogRoutes from "./routes/auditLogRoutes";
 import accessRequestRoutes from "./routes/accessRequestRoutes";
@@ -24,7 +23,6 @@ app.get("/health", (_req: Request, res: Response) => {
 
 app.use("/auth", authRoutes);
 app.use("/entries", entryRoutes);
-app.use("/treasury", treasuryRoutes);
 app.use("/objections", objectionRoutes);
 app.use("/audit-log", auditLogRoutes);
 app.use("/access-requests", accessRequestRoutes);
