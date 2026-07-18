@@ -6,12 +6,10 @@ import { prisma } from "../lib/prisma";
 export async function register(req: Request, res: Response) {
   try {
     if (process.env["DEMO_MODE"] !== "true") {
-      return res
-        .status(403)
-        .json({
-          message:
-            "Self-registration is disabled. Please request access instead.",
-        });
+      return res.status(403).json({
+        message:
+          "Self-registration is disabled. Please request access instead.",
+      });
     }
 
     const { name, email, password, role } = req.body;
