@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import { prisma } from "../../lib/prisma";
-import { generateTempPassword } from "../../lib/generatePassword";
 
 export async function approveAccessRequest(req: Request, res: Response) {
   return reviewAccessRequest(req, res, "approved");
@@ -40,11 +39,16 @@ async function reviewAccessRequest(
         .json({ message: `Request is already ${accessRequest.status}` });
     }
 
-    let tempPassword: string | null = null;
-
     if (decision === "approved") {
-      tempPassword = generateTempPassword();
-      const passwordHash = await bcrypt.hash(tempPassword, 10);
+      const { password } = req.body;
+
+      if (!password || typeof password !== "string" || password.length < 8) {
+        return res
+          .status(400)
+          .json({ message: "A password of at least 8 characters is required" });
+      }
+
+      const passwordHash = await bcrypt.hash(password, 10);
 
       await prisma.user.create({
         data: {
@@ -74,7 +78,7 @@ async function reviewAccessRequest(
       },
     });
 
-    return res.status(200).json({ request: updated, tempPassword });
+    return res.status(200).json({ request: updated });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Internal server error" });
