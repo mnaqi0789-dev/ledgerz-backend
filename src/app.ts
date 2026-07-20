@@ -10,7 +10,7 @@ import overviewRoutes from "./routes/overviewRoutes";
 
 const app: Application = express();
 
-app.use((req: Request, res: Response, next: NextFunction) => {
+app.use((req: Request, res: Response, next: NextFunction): void => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader(
     "Access-Control-Allow-Methods",
@@ -18,7 +18,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   );
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (req.method === "OPTIONS") {
-    return res.status(204).end();
+    res.status(204).end();
+    return;
   }
   next();
 });
