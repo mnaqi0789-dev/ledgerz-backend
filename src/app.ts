@@ -1,5 +1,4 @@
 import express, { Application, Request, Response, NextFunction } from "express";
-import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import authRoutes from "./routes/authRoutes";
@@ -11,13 +10,20 @@ import overviewRoutes from "./routes/overviewRoutes";
 
 const app: Application = express();
 
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+  );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
+  }
+  next();
+});
+
 app.use(helmet());
-app.use(
-  cors({
-    origin: true,
-    credentials: true,
-  }),
-);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
