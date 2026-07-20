@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 
 export async function createObjection(req: Request, res: Response) {
@@ -29,20 +30,22 @@ export async function createObjection(req: Request, res: Response) {
 
     const userId = req.user.id;
 
-    const objection = await prisma.$transaction(async (tx) => {
-      const createdObjection = await tx.objection.create({
-        data: { entryId, raisedBy: userId, note },
-      });
-      await tx.auditLog.create({
-        data: {
-          refType: "objection",
-          refId: createdObjection.id,
-          action: "raised",
-          actorId: userId,
-        },
-      });
-      return createdObjection;
-    });
+    const objection = await prisma.$transaction(
+      async (tx: Prisma.TransactionClient) => {
+        const createdObjection = await tx.objection.create({
+          data: { entryId, raisedBy: userId, note },
+        });
+        await tx.auditLog.create({
+          data: {
+            refType: "objection",
+            refId: createdObjection.id,
+            action: "raised",
+            actorId: userId,
+          },
+        });
+        return createdObjection;
+      },
+    );
 
     return res.status(201).json(objection);
   } catch (err) {
